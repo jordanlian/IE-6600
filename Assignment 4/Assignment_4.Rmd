@@ -1,0 +1,187 @@
+---
+title: "Assignment 4"
+author: "Jordan Lian"
+date: "3/1/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1 (20 points)
+From the New York collision dataset create the following parallel coordinate plot. The font type, font case, color, and theme in your visualization can differ. Use the code below to generate the parallel coordinate plot. Critique the visualization and include your improved solution.
+
+### Sample Code
+```{r eval=FALSE}
+ggparcoord(df, columns = , groupColumn = ,
+           showPoints = TRUE,
+           title = "Parallel Coordinate Plot for NY Collisions",
+           scale = "globalminmax")
+```
+
+### Original Plot
+```{r eval=FALSE}
+# Libraries
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r df, warning=FALSE}
+# Load dataset, get rid of NA values for BOROUGH
+origin_df <- read_csv("ny_accidents.csv")
+df <- origin_df
+df <- df[!is.na(df$BOROUGH), ]
+
+# Rename columns, store as a vector
+colnames(df)[13:18] <- c("PEDESTRIANS INJURED", "PEDESTRIANS KILLED", 
+                         "CYCLISTS INJURED", "CYCLISTS KILLED", 
+                         "MOTORISTS INJURED", "MOTORISTS KILLED")
+names_vec <- colnames(df)[13:18]
+
+# Aggregate data frame, rename new columns
+par_cord <- aggregate(cbind(df$`PEDESTRIANS INJURED`, 
+                            df$`PEDESTRIANS KILLED`, 
+                            df$`CYCLISTS INJURED`, 
+                            df$`CYCLISTS KILLED`,
+                            df$`MOTORISTS INJURED`,
+                            df$`MOTORISTS KILLED`),
+                      by=list(Category=df$BOROUGH), FUN=sum)
+colnames(par_cord) <- c("BOROUGH", names_vec)
+par_cord
+
+# Plot
+library(GGally)
+ggparcoord(par_cord, columns = 2:7, groupColumn = 1,
+           showPoints = TRUE,
+           title = "Parallel Coordinate Plot for NY Collisions",
+           scale="globalminmax") + scale_x_discrete(guide = guide_axis(n.dodge=2))
+```
+This plot has too many lines, and the killings are so much smaller than the injuries. This makes viewing some of the different lines hard especially when some of them intersect at very similar points. If I used a bar graph, the same problem would occur, so I decided to generate two heat maps.
+
+### Improved Solution
+
+As mentioned above, I generated two heat maps, where one looks at injuries, and the other looks at killings. I stacked all of the columns in the parallel coordinate data frame apart from "BOROUGH", and then I used cbind() to add it back. THen I used ggplot() and geom_tile() to get the heat maps.
+```{r injured, killed, warning=FALSE}
+# Injured data frame
+injured <- cbind(par_cord$BOROUGH,stack(par_cord[,c(2, 4, 6)]))
+colnames(injured) <- c("BOROUGH", "Values", "Accident")
+injured
+
+# Killed data frame
+killed <- cbind(par_cord$BOROUGH, stack(par_cord[,c(3, 5, 7)]))
+colnames(killed) <- c("BOROUGH","Values", "Accident")
+
+# Injured heat map
+ggplot(injured, aes(fill=Values, y=Accident, x=BOROUGH)) +
+  geom_tile() +
+  ggtitle("Injured Heat Map") +
+  scale_x_discrete(guide = guide_axis(n.dodge=2))
+
+
+# Killed heat map
+ggplot(killed, aes(fill=Values, y=Accident, x=BOROUGH)) +
+  geom_tile() +
+  ggtitle("Killed Heat Map") +
+  scale_x_discrete(guide = guide_axis(n.dodge=2))
+```
+For injuries, motorists seem to get the brunt of them, while pedestrians seemed to be the majority of people killed. This is not surprising given that this is a collision data set, and that pedestrians are the most vulnerable group when it comes to collisions while in traffic. Motorists are the most vulnerable on the road, but are far more likely to sustain bad injuries than die in an accident. With regards to location, it seems like most accidents take place in Brooklyn or Queens. 
+
+## Question 2 (60 points)
+From the link (\textcolor{blue}{http://profiles.doe.mass.edu/statereport/sat.aspx}) download the average SAT scores for the year 2013-14 and create the following plots using this code. The font type, font case, color, and theme in your visualization can differ. Use the following codes to create the above three plots.
+
+### Sample Code
+```{r eval=FALSE}
+# For paired correlation
+ggpairs(df)
+
+# For boxplot
+ggplot(df, aes(x=, y=)) + geom_boxplot()
+
+# For density
+ggplot(df, aes(x=, fill=)) + geom_density(alpha=0.5)
+```
+
+### Actual Code
+```{r origin_data, data, mod_data, warning=FALSE}
+# Load dataset
+library(readxl)
+origin_data <- read_excel('sat_performance.xlsx')
+data <- origin_data
+head(data)
+
+# For paired correlation
+ggpairs(data[,4:6]) +
+  ggtitle("Paired Correlation between Reading, Writing, and Math Test Scores")
+
+# For boxplot
+library(reshape2)
+ggplot(data = melt(data[,4:6]), aes(x=variable, y=value)) + 
+  geom_boxplot(aes(fill=variable)) +
+  xlab("Test Subjects") +
+  ylab("Average Test Score") +
+  labs(fill="Subject") +
+  ggtitle("Boxplot for Reading, Writing, and Math Test Scores")
+
+# Stack data by test subject for the density plot
+mod_data <- stack(data[,4:6])
+colnames(mod_data) <- c("Score", "Subject")
+mod_data[sample(nrow(mod_data), 10), ]
+
+# Density plot
+ggplot(mod_data, aes(x=Score)) + 
+  geom_density(aes(group=Subject, colour=Subject, fill=Subject), alpha=0.5) +
+  xlab("Average Test Score") +
+  ylab("Density") +
+  ggtitle("Density Plot for Reading, Writing, and Math Test Scores")
+```
+
+## Question 3 (20 points) 
+Create a visualization that captures the relation between Avg. SAT scores (use data from question 2) and median household income in that school district. For the median household income of the school districts use \textcolor{blue}{http://www.usa.com/rank/massachusetts-state--median-household-income--school-district-rank.htm}. Write your observations from the visualization.
+
+So when I looked at the income dataset, the district names were not exact compared to the SAT dataset. The SAT dataset had the district codes, but the income dataset didn't, so I used Google to find all of the district codes for the income dataset. Once I got all of the codes, I put the matched incomes in the SAT dataset based off of the district codes using the match() function, where I matched the district codes from both datasets.
+
+\textcolor{blue}{https://profiles.doe.mass.edu/search/search.aspx?leftNavId=11238}
+
+Go to the dropdown menu, select "Public School District", and click "Get Results".
+
+### Data Preparation
+```{r income, warning=FALSE}
+# Load dataset
+income <- read_excel('median_income.xlsx')
+
+# Change column names
+colnames(income)[2] <- c("Income")
+colnames(data)[2] <- c("District_Code")
+head(income)
+
+# Join the two tables and add an income column to the SAT dataset
+data$Income <- income$Income[match(data$District_Code, income$Code)]
+
+# Create a new overall score column
+data$Overall <- data$Reading + data$Writing + data$Math
+```
+
+### SAT Scores vs Income
+```{r warning=FALSE}
+# ggpubr library for stat_cor()
+library(ggpubr)
+
+# Plot
+ggplot(data, aes(x=Income, y=Overall)) + 
+  geom_point() +
+  xlab("Median Household Income") +
+  ylab("Average SAT Score") +
+  ggtitle("Average SAT Scores vs Median Household Income") +
+  stat_cor(label.x = 150000, label.y = 1500) +
+  geom_smooth(method='auto')
+```
+
+It looks like there is a relatively strong positive correlation, as shown by the R value, and by the scatter plot. However, it does start to flatten, which makes sense because the test scores have a maximum which is very hard to attain whereas income has no limit. So even as income continues to go up, the average scores will likely remain around a little under 2000 because an average around 2000 is very difficult to attain regardless of income for a school with a lot of students. The scores have a stronger correlation with IQ and intelligence rather than income. 
