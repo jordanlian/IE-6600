@@ -1,0 +1,309 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+## Bullet Graph
+```{r}
+library(devtools)
+#Code Source: https://www.santoshsrinivas.com/bullet-graphs-using-r/
+install_github(c('rstudio/htmltools',
+              'ramnathv/htmlwidgets',
+              'sipemu/d3Dashboard'))
+```
+
+```{r}
+library(d3Dashboard)
+
+ytd2005 <- list(
+  title=list("Revenue", "Profit", "Order Size", "New Customers", "Satisfaction"),
+  subtitle=list("US$, in thousands", "%", "US$, average", "count", "out of 5"),
+  range=list(c(150, 225, 300),
+             c(20, 25, 30),
+             c(350, 500, 600),
+             c(1400, 2000, 2500),
+             c(3.5, 4.25, 5)),
+  measures=list(c(220, 270),
+                c(21, 23),
+                c(100, 320),
+                c(1000, 1650),
+                c(3.2, 4.7)),
+  markers=list(250, 26, 550, 2100, 4.2)
+)
+
+# Plot
+bulletGraph(ytd2005)
+```
+
+## Population Pyramid
+```{r}
+#Code Source: https://stackoverflow.com/questions/14680075/simpler-population-pyramid-in-ggplot2 
+test <- data.frame(v=sample(1:20,1000,replace=T), g=c('M','F'))
+
+library(ggplot2)
+library(plyr)    
+ggplot(data=test,aes(x=as.factor(v),fill=g)) + 
+  geom_bar(data=subset(test,g=="F")) + 
+  geom_bar(data=subset(test,g=="M"),aes(y=..count..*(-1))) + 
+  scale_y_continuous(breaks=seq(-40,40,10),labels=abs(seq(-40,40,10))) + 
+  coord_flip()
+```
+
+## Circluar Column Plot
+```{r}
+# Code Source: https://www.r-graph-gallery.com/296-add-labels-to-circular-barplot/
+library(tidyverse)
+ 
+# Create dataset
+data=data.frame(
+  id=seq(1,60),
+  individual=paste( "Mister ", seq(1,60), sep=""),
+  value=sample( seq(10,100), 60, replace=T)
+)
+ 
+# Make the plot
+p = ggplot(data, aes(x=as.factor(id), y=value)) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+  
+  # This add the bars with a blue color
+  geom_bar(stat="identity", fill=alpha("blue", 0.3)) +
+  
+  # Limits of the plot = very important. The negative value controls the size of the inner circle, the positive one is useful to add size over each bar
+  ylim(-100,120) +
+  
+  # Custom the theme: no axis title and no cartesian grid
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-2,4), "cm")     # This remove unnecessary margin around plot
+  ) +
+  
+  # This makes the coordinate polar instead of cartesian.
+  coord_polar(start = 0)
+p
+```
+
+```{r}
+# Code Source: https://www.r-graph-gallery.com/296-add-labels-to-circular-barplot/
+# Create dataset
+data=data.frame(
+  id=seq(1,60),
+  individual=paste( "Mister ", seq(1,60), sep=""),
+  value=sample( seq(10,100), 60, replace=T)
+)
+ 
+# ----- This section prepare a dataframe for labels ---- #
+# Get the name and the y position of each label
+label_data=data
+ 
+# calculate the ANGLE of the labels
+number_of_bar=nrow(label_data)
+angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+ 
+# calculate the alignment of labels: right or left
+# If I am on the left part of the plot, my labels have currently an angle < -90
+label_data$hjust<-ifelse( angle < -90, 1, 0)
+ 
+# flip angle BY to make them readable
+label_data$angle<-ifelse(angle < -90, angle+180, angle)
+# ----- ------------------------------------------- ---- #
+ 
+ 
+# Start the plot
+p = ggplot(data, aes(x=as.factor(id), y=value)) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+  
+  # This add the bars with a blue color
+  geom_bar(stat="identity", fill=alpha("skyblue", 0.7)) +
+  
+  # Limits of the plot = very important. The negative value controls the size of the inner circle, the positive one is useful to add size over each bar
+  ylim(-100,120) +
+  
+  # Custom the theme: no axis title and no cartesian grid
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-1,4), "cm")      # Adjust the margin to make in sort labels are not truncated!
+  ) +
+  
+  # This makes the coordinate polar instead of cartesian.
+  coord_polar(start = 0) +
+  
+  # Add the labels, using the label_data dataframe that we have created before
+  geom_text(data=label_data, aes(x=id, y=value+10, label=individual, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_data$angle, inherit.aes = FALSE ) 
+ 
+p
+```
+
+```{r}
+#Code Source: https://www.r-graph-gallery.com/297-circular-barplot-with-groups/
+data=data.frame(
+  individual=paste( "Mister ", seq(1,60), sep=""),
+  value=sample( seq(10,100), 60, replace=T)
+)
+ 
+# Set a number of 'empty bar'
+empty_bar=10
+ 
+# Add lines to the initial dataset
+to_add = matrix(NA, empty_bar, ncol(data))
+colnames(to_add) = colnames(data)
+data=rbind(data, to_add)
+data$id=seq(1, nrow(data))
+ 
+# Get the name and the y position of each label
+label_data=data
+number_of_bar=nrow(label_data)
+angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+label_data$hjust<-ifelse( angle < -90, 1, 0)
+label_data$angle<-ifelse(angle < -90, angle+180, angle)
+ 
+# Make the plot
+p = ggplot(data, aes(x=as.factor(id), y=value)) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+  geom_bar(stat="identity", fill=alpha("green", 0.3)) +
+  ylim(-100,120) +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-1,4), "cm") 
+  ) +
+  coord_polar(start = 0) + 
+  geom_text(data=label_data, aes(x=id, y=value+10, label=individual, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_data$angle, inherit.aes = FALSE ) 
+ 
+p
+```
+
+```{r}
+#Code Source:https://www.r-graph-gallery.com/297-circular-barplot-with-groups/
+data=data.frame(
+  individual=paste( "Mister ", seq(1,60), sep=""),
+  group=c( rep('A', 10), rep('B', 30), rep('C', 14), rep('D', 6)) ,
+  value=sample( seq(10,100), 60, replace=T)
+)
+ 
+# Set a number of 'empty bar' to add at the end of each group
+empty_bar=4
+to_add = data.frame( matrix(NA, empty_bar*nlevels(data$group), ncol(data)) )
+colnames(to_add) = colnames(data)
+to_add$group=rep(levels(data$group), each=empty_bar)
+data=rbind(data, to_add)
+data=data %>% arrange(group)
+data$id=seq(1, nrow(data))
+ 
+# Get the name and the y position of each label
+label_data=data
+number_of_bar=nrow(label_data)
+angle= 90 - 360 * (label_data$id-0.5) /number_of_bar     # I substract 0.5 because the letter must have the angle of the center of the bars. Not extreme right(1) or extreme left (0)
+label_data$hjust<-ifelse( angle < -90, 1, 0)
+label_data$angle<-ifelse(angle < -90, angle+180, angle)
+ 
+# Make the plot
+p = ggplot(data, aes(x=as.factor(id), y=value, fill=group)) +       # Note that id is a factor. If x is numeric, there is some space between the first bar
+  geom_bar(stat="identity", alpha=0.5) +
+  ylim(-100,120) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-1,4), "cm") 
+  ) +
+  coord_polar() + 
+  geom_text(data=label_data, aes(x=id, y=value+10, label=individual, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_data$angle, inherit.aes = FALSE ) 
+ 
+p
+```
+
+## Circular Bar Plot
+```{r}
+
+data=data.frame(group=c("A ","B ","C ","D ") , value=c(33,62,56,67) )
+ 
+# Usual bar plot :
+ggplot(data, aes(x = group, y = value ,fill = group )) + 
+    geom_bar(width = 0.85, stat="identity")
+    
+# Circular one
+ggplot(data, aes(x = group, y = value ,fill = group)) + 
+    geom_bar(width = 0.85, stat="identity") +    
+    
+    # To use a polar plot and not a basic barplot
+    coord_polar(theta = "y") +    
+    
+    #Remove useless labels of axis
+    xlab("") + ylab("") +
+    
+    #Increase ylim to avoid having a complete circle
+    ylim(c(0,75)) + 
+    
+    #Add group labels close to the bars :
+    geom_text(data = data, hjust = 1, size = 3, aes(x = group, y = 0, label = group)) +
+    
+    #Remove useless legend, y axis ticks and y axis text
+    theme(legend.position = "none" , axis.text.y = element_blank() , axis.ticks = element_blank())
+
+```
+
+## Gantt Chart
+```{r}
+# Code Source: https://www.molecularecologist.com/2019/01/simple-gantt-charts-in-r-with-ggplot2-and-the-tidyverse/
+gantt <- read.csv("gantt.csv", h=T)
+acts <- c("Community scientist observations", "Undergraduate field course", "Behavioral field experiments", "Reference genome assembly", "Sampling for DNA and morphology", "Genomic sequencing of field samples", "Reference genome annotation", "Genotype-phenotype association", "Landscape genomic analyses")
+els <- c("Behavioral observations", "Genomic data", "Analyses", "Broader impacts", "Publication preparation")
+g.gantt <- gather(gantt, "state", "date", 4:5) %>% mutate(date = as.Date(date, "%Y.%m.%d"), Activity=factor(Activity, acts[length(acts):1]), Project.element=factor(Project.element, els))
+ggplot(g.gantt, aes(date, Activity, color = Project.element, group=Item)) + 
+  geom_line(size = 10) +
+  labs(x="Project year", y=NULL, title="Project timeline")
+```
+
+## Candle Stick Chart
+```{r}
+library(plotly)
+library(quantmod)
+
+getSymbols("AAPL",src='yahoo')
+
+# basic example of ohlc charts
+df <- data.frame(Date=index(AAPL),coredata(AAPL))
+df <- tail(df, 30)
+
+p <- df %>%
+  plot_ly(x = ~Date, type="candlestick",
+          open = ~AAPL.Open, close = ~AAPL.Close,
+          high = ~AAPL.High, low = ~AAPL.Low) %>%
+  layout(title = "Basic Candlestick Chart")
+
+p
+```
+
+## Open High Low Close Chart
+```{r}
+p <- df %>%
+  plot_ly(x = ~Date, type="ohlc",
+          open = ~AAPL.Open, close = ~AAPL.Close,
+          high = ~AAPL.High, low = ~AAPL.Low) %>%
+  layout(title = "Basic OHLC Chart")
+p
+```
+
+Alluvial Chart
+
+```{r}
+#Code Source: https://cran.r-project.org/web/packages/ggalluvial/vignettes/ggalluvial.html
+data(majors)
+majors$curriculum <- as.factor(majors$curriculum)
+ggplot(majors,
+       aes(x = semester, stratum = curriculum, alluvium = student,
+           fill = curriculum, label = curriculum)) +
+  scale_fill_brewer(type = "qual", palette = "Set2") +
+  geom_flow(stat = "alluvium", lode.guidance = "rightleft",
+            color = "darkgray") +
+  geom_stratum() +
+  theme(legend.position = "bottom") +
+  ggtitle("student curricula across several semesters")
+```
+
