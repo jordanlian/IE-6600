@@ -1,0 +1,438 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+## How to format main, axis and legend titles
+```{r}
+# Main and axis title
+library(ggplot2)
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+
+p<-ggplot(ToothGrowth, aes(x=dose, y=len)) + geom_boxplot()+ ggtitle("Plot of length by dose") + xlab("Dose (mg)") + ylab("Teeth length")
+
+p
+```
+
+
+```{r}
+# Change text of legend
+p<-ggplot(ToothGrowth, aes(x=dose, y=len, fill=dose)) + geom_boxplot()+ ggtitle("Plot of length by dose") + xlab("Dose (mg)") + ylab("Teeth length") 
+
+p+labs(fill = "Dose (mg)")
+
+```
+
+```{r, eval=FALSE}
+# main title
+p + theme(plot.title = element_text(family, face, colour, size))
+# x axis title 
+p + theme(axis.title.x = element_text(family, face, colour, size))
+# y axis title
+p + theme(axis.title.y = element_text(family, face, colour, size))
+```
+
+```{r}
+p + theme(plot.title = element_text(family="Times New Roman", face="bold.italic",color="red",size=16), axis.title.x = element_text(family="Times New Roman",size=16), axis.title.y = element_text(family="Arial",size=16))
+```
+
+```{r}
+# Change text properties for entire plot
+p+theme(text=element_text(size=16,  family="Times New Roman"))
+```
+
+
+
+```{r}
+# Change legend position
+p + theme(legend.position="top")
+```
+
+```{r}
+p + theme(legend.position="bottom")
+```
+
+```{r}
+p + theme(legend.position = c(0.8, 0.2))
+```
+
+```{r}
+# Chnage legend title
+p + theme(legend.title = element_text(family="Times New Roman",colour="blue", size=16, face="bold"))+labs(fill = "Dose (mg)")
+```
+
+```{r}
+# Change legend text
+p + theme(legend.text = element_text(family="Times New Roman",colour="blue", size=16, face="bold"))+labs(fill = "Dose (mg)")
+```
+
+```{r}
+# Change background color of legend
+p + theme(legend.background = element_rect(fill="lightblue", size=0.5,linetype="solid"))
+```
+
+```{r}
+# Remove only the legend title
+p + theme(legend.title = element_blank())
+```
+
+```{r}
+# Remove the plot legend
+p + theme(legend.position='none')
+```
+
+```{r}
+p <- ggplot(data = mtcars, 
+    aes(x=mpg, y=wt, color=cyl, size=qsec, shape=factor(gear)))+
+    geom_point()
+
+p
+```
+
+```{r}
+# Select which dimension to show using legend
+p+guides(color = FALSE, size = FALSE)
+```
+
+## Changing Colors
+```{r}
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+mtcars$cyl <- as.factor(mtcars$cyl)
+```
+
+```{r}
+# box plot
+ggplot(ToothGrowth, aes(x=dose, y=len)) +
+  geom_boxplot( color="blueviolet")
+
+# Use color names from R
+```
+
+```{r}
+# box plot
+ggplot(ToothGrowth, aes(x=dose, y=len)) +
+  geom_boxplot(fill="burlywood", color="darkred")
+```
+
+```{r}
+# box plot
+ggplot(ToothGrowth, aes(x=dose, y=len)) +
+  geom_boxplot(fill="#dbee40", color="#1d1916")
+
+# Use Hexcolor scheme
+```
+
+```{r}
+# scatter plot
+ggplot(mtcars, aes(x=wt, y=mpg)) + 
+  geom_point(color='#3b5998')
+
+```
+
+```{r}
+# Box plot
+bp<-ggplot(ToothGrowth, aes(x=dose, y=len, fill=dose)) +
+  geom_boxplot()
+bp
+```
+
+```{r}
+# Fill group colors manually
+bp+ scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+```
+
+```{r}
+sp<-ggplot(mtcars, aes(x=wt, y=mpg, color=factor(cyl)))+geom_point() 
+
+sp + scale_color_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+
+```
+
+```{r}
+# Using palette colors from brewer package
+library(RColorBrewer)
+# Box plot
+bp + scale_fill_brewer(palette="Dark2")
+```
+
+```{r}
+# Using grey scale
+# Box plot
+bp + scale_fill_grey() 
+```
+
+```{r}
+# Scatter plot
+sp + scale_color_grey() 
+```
+
+```{r}
+# Using continuous colors
+sp2<-ggplot(mtcars, aes(x=wt, y=mpg, color=qsec)) + geom_point()
+sp2
+```
+
+```{r}
+# Sequential color scheme
+sp2+scale_color_gradient(low="blue", high="red")
+```
+
+```{r}
+# Diverging color scheme
+mid<-mean(mtcars$qsec)
+sp2+scale_color_gradient2(midpoint=mid, low="blue", mid="white",
+                     high="red", space ="Lab" )
+```
+
+```{r}
+# Gradient between n colors
+sp3<-ggplot(mtcars, aes(x=wt, y=mpg, color=mpg)) + geom_point()
+sp3+scale_color_gradientn(colours = rainbow(5))
+```
+
+```{r}
+# Providing palette colors to continuous variable
+sp3<-ggplot(mtcars, aes(x=wt, y=mpg, color=mpg)) + geom_point()
+
+sp3+ scale_color_brewer(palette="Dark2")
+```
+
+
+## Changing background theme
+
+```{r}
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+p <- ggplot(ToothGrowth, aes(x=dose, y=len)) + geom_boxplot()
+p
+```
+```{r}
+p + theme_gray()
+```
+
+```{r}
+p + theme_bw()
+```
+
+```{r}
+p + theme_light()
+```
+
+```{r}
+p + theme_minimal()
+```
+
+```{r}
+p + theme_classic()
+```
+
+```{r}
+p + theme_void()
+```
+
+```{r}
+p + theme_dark()
+```
+
+```{r}
+ggplot(ToothGrowth, aes(x=dose, y=len, fill=supp)) +
+  geom_boxplot()+scale_fill_manual(values=c("#fe5970", "#c2fe59"))+theme_dark()
+```
+
+```{r}
+# Custom background colors
+# Change the colors of plot panel background to lightblue
+# and the color of grid lines to white
+p + theme(
+  panel.background = element_rect(fill = "lightblue",
+                                colour = "lightblue",
+                                size = 0.5, linetype = "solid"),
+  panel.border = element_rect(colour = "black", fill=NA, size=5),
+  
+  panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                colour = "white"), 
+  panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                colour = "white")
+  
+  )
+```
+
+```{r}
+# Remove panel borders and grid lines
+p + theme(panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+```
+
+
+```{r}
+# Hide panel borders and grid lines
+# But change axis line
+p + theme(panel.border = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.line = element_line(size = 0.5, linetype = "solid",
+                                   colour = "black"))
+```
+
+## Axis Ticks
+
+```{r}
+# scatter plot
+p <- ggplot(ToothGrowth, aes(x=dose, y=len)) + geom_boxplot()
+p
+```
+
+
+```{r}
+# Change the appearance and the orientation angle
+# of axis tick labels
+p + theme(axis.text.x = element_text(face="bold", color="#993333", 
+                           size=14, angle=45),
+          axis.text.y = element_text(face="bold", color="#993333", 
+                           size=14, angle=45))
+```
+
+```{r}
+# Hide x an y axis tick mark labels
+p + theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank())
+```
+
+```{r}
+# Remove axis ticks and tick mark labels
+p + theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank())
+```
+
+```{r}
+# Change the line type and color of axis lines
+p + theme( axis.line = element_line(colour = "darkblue", 
+                      size = 1, linetype = "solid"))
+```
+
+```{r}
+# Change the order of items
+# Change the x axis name
+p + scale_x_discrete(name ="Dose (mg)", 
+                    limits=c("2","1","0.5"))
+```
+
+```{r}
+# Change ticks name
+p + scale_x_discrete(breaks=c("0.5","1","2"),
+        labels=c("Dose 0.5", "Dose 1", "Dose 2"))
+```
+
+```{r}
+# Choose which items to display
+p + scale_x_discrete(limits=c("0.5", "2"))
+```
+
+```{r}
+# Changing axis with continuous variables
+sp<-ggplot(cars, aes(x = speed, y = dist)) + geom_point()
+sp
+```
+
+```{r}
+# Change x and y axis labels, and limits
+sp + scale_x_continuous(name="Speed of cars", limits=c(0, 30)) +
+  scale_y_continuous(name="Stopping distance", limits=c(0, 150))
+```
+
+```{r}
+# Set tick marks on y axis
+# a tick mark is shown on every 5
+p + scale_y_continuous(breaks=seq(0,40,5))
+```
+
+```{r}
+# Tick marks can be spaced randomly
+p + scale_y_continuous(breaks=c(5,7.5, 20, 25))
+```
+
+```{r}
+# Remove tick mark labels and gridlines
+p + scale_y_continuous(breaks=NULL)
+```
+
+# Multigrid
+```{r}
+p <- ggplot(mpg, aes(displ, cty)) + geom_point()
+
+# Use vars() to supply variables from the dataset:
+p + facet_grid(rows = vars(drv))
+```
+
+```{r}
+p <- ggplot(mpg, aes(displ, cty)) + geom_point()
+
+# Use vars() to supply variables from the dataset:
+p + facet_grid(cols  = vars(drv))
+```
+
+```{r}
+p + facet_grid(vars(drv), vars(cyl))
+```
+
+```{r}
+p + facet_grid(. ~ cyl)
+```
+
+```{r}
+p + facet_grid(cyl~.)
+```
+
+```{r}
+p + facet_grid(drv ~ cyl)
+```
+
+```{r}
+mt <- ggplot(mtcars, aes(mpg, wt, colour = factor(cyl))) +
+  geom_point()
+
+mt + facet_grid(. ~ cyl, scales = "free")
+```
+
+
+```{r}
+mg <- ggplot(mtcars, aes(x = mpg, y = wt)) + geom_point()
+mg + facet_grid(carb + am ~ gear)
+```
+
+
+
+```{r}
+p + facet_grid(drv ~ cyl, labeller = label_both)
+```
+
+```{r}
+p + facet_grid(drv ~ cyl)+theme(strip.background = element_rect(colour="black", fill="white", size=1.5, linetype="solid"))
+```
+
+```{r}
+ggplot(mpg, aes(displ, cty)) + geom_point(color="#ffd23d") + facet_grid(drv ~ cyl)+theme_dark(base_size = 18)
+```
+
+
+```{r}
+ggplot(mpg, aes(displ, cty)) + geom_point(color="#2f6276") + facet_grid(drv ~ cyl)+theme_bw(base_size = 18)
+```
+
+```{r}
+ggplot(mpg, aes(displ, cty)) + geom_point(color="#008f95") + facet_grid(drv ~ cyl)+theme_minimal(base_size = 18)
+```
+
+```{r}
+ggplot(mpg, aes(displ, cty)) + geom_point(color="#2f6276") + facet_grid(drv ~ cyl)+theme_classic()
+```
+
+```{r}
+ggplot(mpg, aes(displ, cty)) + geom_point(color="#2f6276") + facet_grid(drv ~ cyl)+theme_bw(base_size = 18)
+ggsave("output.png", device="png")
+```
+
