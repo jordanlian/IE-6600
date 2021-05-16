@@ -1,0 +1,81 @@
+---
+title: "Week 6.2"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Parallel Coordinate Plots
+```{r data, warning=FALSE}
+
+library(hrbrthemes)
+library(GGally)
+library(ggplot2)
+
+data <- iris
+
+ggparcoord(data,
+    columns = 1:4, groupColumn = 5, order = "anyClass",
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot for the Iris Data",
+    scale="globalminmax"
+    ) + theme_ipsum()
+```
+
+```{r warning=FALSE}
+data <- iris
+data$Sepal.Length<-data$Sepal.Length*100
+ggparcoord(data,
+    columns = 1:4, groupColumn = 5, order = "anyClass",
+    showPoints = TRUE, 
+    title = "Parallel Coordinate Plot for the Iris Data",
+    scale="globalminmax"
+    ) + theme_ipsum()
+```
+
+
+## Simple Scatter Plots
+### Uses: Relationship between variables
+```{r}
+sample_data<-mpg
+ggplot(sample_data,aes(cty,hwy))+geom_point()
+```
+
+```{r}
+
+ggplot(sample_data,aes(cty,hwy,color=factor(cyl),shape=factor(drv),size=displ))+geom_point()
+```
+
+### Visual Correlation
+```{r}
+ggplot(iris,aes(Sepal.Length,Sepal.Width,color=Species))+geom_point()
+```
+
+### Correlation Plots
+```{r warning=FALSE}
+ggpairs(iris[,-5])+theme_ipsum()
+ggsave("sample.png", dpi=300)
+```
+
+```{r}
+library(corrplot)
+M<-cor(iris[,-5])
+head(round(M,2))
+corrplot(M, method="circle")
+
+```
+
+```{r}
+corrplot(M, method="pie")
+```
+
+```{r}
+corrplot(M, method="color")
+```
+
+```{r}
+corrplot(M, method="number")
+```
+
+
+
