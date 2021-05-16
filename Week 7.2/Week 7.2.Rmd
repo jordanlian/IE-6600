@@ -1,0 +1,44 @@
+---
+title: "Week 7.2"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(forcats)
+library(hrbrthemes)
+library(tidyr)
+```
+
+## Line Plots
+```{r, df, warning=FALSE}
+df <- data.frame(Income=c("Low", "Medium", "High"), Mean_SAT=c(450, 550, 600))
+ggplot(df, aes(x=Income,  y= Mean_SAT, group=1)) + geom_line()+xlab("Income") + geom_point(size=2)
+# theme_ipsum()
+```
+
+```{r warning=FALSE}
+df3 <- data.frame(Category=c("Furniture", "Technology", "Office Supplies"), Total_Sales=c(4500, 6000, 8000))
+ggplot(df3, aes(x=fct_inorder(Category),  y= Total_Sales, group=1)) +geom_line()+xlab("Category")+geom_point(size=2)
+# theme_ipsum()
+```
+
+## Time series
+```{r}
+library(lubridate)
+mobility$date<-as.Date(mobility$date, format = "%m/%d/%y")
+ggplot(mobility, aes(x=date, y=Retail, group=1))+geom_line()+theme_ipsum()
+```
+
+```{r}
+temp<- mobility %>%
+  pivot_longer(cols=c("Retail":"Residential"), names_to="POI",values_to="percentChange")
+```
+
+```{r}
+ggplot(temp, aes(x=date, y=percentChange, group=POI, color=POI))+geom_line()+theme_ipsum()+theme(legend.position="bottom")
+```
+
