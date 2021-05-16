@@ -1,0 +1,221 @@
+---
+title: "Week 5.2 Visualizing Amounts"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library (magrittr)
+library(tidyr)
+# Use ggplot function to plot
+# Using only ggplot function will create a blank canvas
+data<-mpg
+ggplot(mpg)
+```
+
+```{r}
+# Map variables to aesthetics 
+ggplot(mpg, aes(x=cty,y=hwy))
+```
+
+```{r}
+# Generate canvas + add axis + plot data
+ggplot(mpg, aes(x=cty,y=hwy))+geom_point()
+```
+
+```{r}
+# Map additional dimension to aesthetics. In this case color
+ggplot(mpg, aes(x=cty,y=hwy, color=class))+geom_point()
+```
+
+```{r}
+# Map dimension as shape
+ggplot(mpg, aes(x=cty,y=hwy, shape=drv))+geom_point()
+```
+
+```{r}
+# Map dimension as size
+ggplot(mpg, aes(x=cty,y=hwy, size=displ))+geom_point()
+```
+
+```{r}
+# Mapping multi dimensions 
+ggplot(mpg, aes(x=cty,y=hwy, size=displ, color=drv))+geom_point()
+```
+
+
+# Bar Chart
+```{r}
+df <- data.frame(dose=c("D0.5", "D1", "D2"),
+                len=c(4.2, 10, 29.5))
+
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity")
+```
+
+```{r}
+ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity")+coord_flip()
+```
+
+```{r}
+library(gridExtra)
+p1<- ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity")
+p2<- ggplot(data=df, aes(x=dose, y=len)) +
+  geom_bar(stat="identity")+coord_flip()
+grid.arrange(p1,p2,ncol=2)
+```
+
+### Real world example
+```{r}
+crime<-read.csv("boston_crime.csv", stringsAsFactors = F, na.strings = "")
+```
+
+```{r}
+crime%>%
+  group_by(DISTRICT)%>%
+  summarise(Count=n()) %>%
+  drop_na()%>%
+  ggplot(aes(x=DISTRICT, y=Count))+geom_bar(stat='identity')
+```
+
+```{r}
+# Sort the bar graph
+crime%>%
+  group_by(DISTRICT)%>%
+  summarise(Count=n()) %>%
+  drop_na()%>%
+  arrange(desc(Count))%>%
+  ggplot(aes(x=reorder(DISTRICT,-Count), y=Count))+geom_bar(stat='identity')+xlab("District")
+```
+
+
+```{r}
+# Sorting example
+p1 <- ggplot(mtcars, aes(x = row.names(mtcars), mpg)) +
+        geom_bar(stat = "identity") +
+        coord_flip() +
+        ggtitle("Fig. A: Default rotated x-axis")
+
+
+p2 <- ggplot(mtcars, aes(x = reorder(row.names(mtcars), mpg), y = mpg)) +
+        geom_bar(stat = "identity") +
+        coord_flip() +
+        ggtitle("Fig. B: Rotated ordered x-axis")
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+# Stacked bar chart
+```{r}
+df2 <- data.frame(supp=rep(c("VC", "OJ"), each=3),
+                dose=rep(c("D0.5", "D1", "D2"),2),
+                len=c(6.8, 15, 33, 4.2, 10, 29.5))
+
+p1<- ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
+  geom_bar(stat="identity")
+p2<- p1+coord_flip()
+grid.arrange(p1,p2,ncol=2)
+```
+
+```{r}
+# Stacked bar chart: Issue 1-too many factors
+crime%>%
+  group_by(DISTRICT, YEAR)%>%
+  summarise(Count=n()) %>%
+  drop_na()%>%
+  arrange(desc(Count))%>%
+  ggplot(aes(x=YEAR, y=Count, fill=DISTRICT))+geom_bar(stat='identity')
+```
+
+# Grouped bar chart
+```{r}
+p1<- ggplot(data=df2, aes(x=dose, y=len, fill=supp)) +
+  geom_bar(stat="identity", position="dodge")
+p2<- p1+coord_flip()
+grid.arrange(p1,p2,ncol=2)
+```
+
+```{r}
+# Avoid sorting within factors while using grouped bar plot
+crime%>%
+  group_by(DISTRICT, YEAR)%>%
+   filter(DISTRICT=="A1" | DISTRICT=="B3"| DISTRICT=="D14"| DISTRICT=="C11") %>%
+  summarise(Count=n()) %>%
+  drop_na()%>%
+  ggplot(aes(x=DISTRICT, y=Count, fill=as.character(YEAR)))+geom_bar(stat='identity', position="dodge")
+```
+
+# Heat Maps
+```{r}
+x <- LETTERS[1:20]
+y <- paste0("var", seq(1,20))
+data <- expand.grid(X=x, Y=y)
+data$Z <- runif(400, 0, 5)
+ 
+
+ggplot(data, aes(X, Y, fill= Z)) + 
+  geom_tile()
+```
+
+```{r}
+crime%>%
+  group_by(DISTRICT, YEAR)%>%
+   filter(DISTRICT=="A1" | DISTRICT=="B3"| DISTRICT=="D14"| DISTRICT=="C11") %>%
+  summarise(Count=n()) %>%
+  drop_na()%>%
+  ggplot(aes(x=DISTRICT, y=as.character(YEAR), fill=Count))+geom_tile()
+```
+
+```{r}
+senate<-read.csv("senate.csv", stringsAsFactors = F, na.strings = "",  sep = "\t")
+
+senate %>%
+  filter(state=="California"| state=="Vermont" |state=="Massachusetts")%>%
+  ggplot(aes(x=state, y=as.character(year), fill=party))+geom_tile()+theme_minimal()
+```
+
+# Pie Charts
+```{r}
+# Simple Pie Chart
+slices <- c(10, 12,4, 16, 8)
+lbls <- c("US", "UK", "Australia", "Germany", "France")
+pie(slices, labels = lbls, main="Pie Chart of Countries")
+```
+
+```{r}
+slices <- c(10, 12, 4, 16, 8) 
+lbls <- c("US", "UK", "Australia", "Germany", "France")
+pct <- round(slices/sum(slices)*100)
+lbls <- paste(lbls, pct) # add percents to labels 
+lbls <- paste(lbls,"%",sep="") # ad % to labels 
+pie(slices,labels = lbls, main="Pie Chart of Countries")
+```
+
+# Tree Maps
+```{r}
+library(treemapify)
+library(dplyr)
+temp<-summarise(group_by(diamonds,cut),total_value=sum(price), total_carat=sum(carat))
+ggplot(temp, aes(area=total_carat,label=cut,fill=cut))+geom_treemap()+ geom_treemap_text(fontface = "italic", colour = "white", place = "centre",grow = FALSE)+ggtitle("Tree Maps for Comparison + Part to Whole")
+```
+
+# Alluvial Charts
+```{r}
+library(ggalluvial)
+titanic_wide <- data.frame(Titanic)
+ggplot(data = titanic_wide,
+       aes(axis1 = Sex, axis2 = Class, axis3 = Age,
+           y = Freq)) +
+  scale_x_discrete(limits = c("Sex", "Class", "Age"), expand = c(.1, .05)) +
+  xlab("Demographic") +
+  geom_alluvium(aes(fill = Survived)) +
+  geom_stratum() + geom_text(stat = "stratum", label.strata = TRUE)
+```
+
+
+
