@@ -1,0 +1,448 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+### Forming Networks using Nodes and Edge List 
+```{r}
+library(ggplot2)
+library(igraph)
+nodes <- read.csv("Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+links <- read.csv("Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = FALSE) 
+net
+```
+
+### Forming Network using Adjacency Matrix
+```{r}
+m<-matrix(0, nrow=3, ncol=3)
+m[1,c(2,3)]<-1
+m[2,c(1,3)]<-1
+m[3,c(1,2)]<-1
+net1<-graph_from_adjacency_matrix(m,mode="undirected")
+```
+
+### Investigating Node and Edge Attributes
+```{r}
+V(net)$type.label
+V(net)$audience.size
+E(net)$weight
+```
+
+### Adding Node and Edge Attributes
+
+```{r}
+net<-set.vertex.attribute(net, "type1", value=c(1:17))
+V(net)$type2<-c(1:17)
+net<-set.edge.attribute(net, "type1", value=c(1:49))
+E(net)$type2<-c(1:49)
+```
+
+### Filtering Nodes and Edge
+```{r}
+V(net)[media=="BBC"]
+E(net)[type=="mention"]
+```
+
+### Plotting Network
+```{r}
+plot(net)
+```
+### Clean up the Network
+```{r}
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+plot(net)
+```
+
+### Visualizing Node Attributes
+### Node color, Node label, Node label color
+```{r}
+plot(net, edge.color="black",
+     vertex.color="orange", vertex.frame.color="black",
+     vertex.label=V(net)$media, vertex.label.color="black") 
+```
+### Node label instead of node shape
+```{r}
+plot(net, vertex.shape="none", vertex.label=V(net)$media, 
+     vertex.label.font=2, vertex.label.color="black",
+     vertex.label.cex=.7, edge.color="gray85")
+```
+### Node color based on node attribute
+```{r}
+colrs <- c("gray50", "orange", "red")
+V(net)$color <- colrs[V(net)$media.type]
+plot(net, vertex.label=V(net)$type.label)
+```
+### Color using Brewer Palette
+```{r}
+library("RColorBrewer")
+pal3 <- brewer.pal(10, "Set3")
+plot(net, edge.color="black",
+     vertex.color=pal3, vertex.frame.color=pal3,
+     vertex.label=V(net)$media, vertex.label.color="black")
+```
+### Change node shape
+```{r}
+plot(net, edge.color="black",vertex.shape="rectangle",
+     vertex.color="orange", vertex.frame.color="black",
+     vertex.label=V(net)$media, vertex.label.color="black")
+```
+
+### Visualizing edge attributes
+
+```{r}
+nodes <- read.csv("Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+links <- read.csv("Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+plot(net)
+```
+
+```{r}
+nodes <- read.csv("Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+links <- read.csv("Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = FALSE) 
+plot(net,edge.width=E(net)$weight)
+```
+
+
+```{r}
+nodes <- read.csv("Dataset1-Media-Example-NODES.csv", header=T, as.is=T)
+links <- read.csv("Dataset1-Media-Example-EDGES.csv", header=T, as.is=T)
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE)
+
+plot(net, edge.color="black", edge.width=E(net)$weight,edge.arrow.size=.4)
+```
+
+```{r}
+plot(net, edge.arrow.size=.4, edge.curved=.1)
+```
+
+```{r}
+plot(net, edge.color="orange", vertex.color="gray50",edge.arrow.size=.4) 
+```
+
+```{r}
+colrs <- c("gray50", "tomato", "gold")
+V(net)$color <- colrs[V(net)$media.type]
+plot(net) 
+legend(x=-1.5, y=-1.1, c("Newspaper","Television", "Online News"), pch=21,
+       col="#777777", pt.bg=colrs, pt.cex=2, cex=.8, bty="n", ncol=1)
+```
+
+
+### Highlight specific nodes
+### Highlight single node
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+V(net)$color[10] <- "green"
+plot(net,vertex.label=V(net)$media,layout=layout_with_lgl)
+```
+### Highlight single node
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+V(net)[7]$color<-"red"
+plot(net, vertex.label=V(net)$media,layout=layout_with_lgl)
+```
+### Highlight edges
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+E(net)$color<-"black"
+E(net)[7]$color<-"red"
+plot(net, vertex.label=V(net)$media,layout=layout_with_lgl)
+```
+
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+E(net)$color<-"black"
+E(net)$color[10]<-"red"
+plot(net, vertex.label=V(net)$media,layout=layout_with_lgl)
+```
+
+### Highlight paths
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+news.path <- shortest_paths(net, 
+                            from = V(net)[media=="MSNBC"], 
+                             to  = V(net)[media=="New York Post"],
+                             output = "both") # both path nodes and edges
+
+# Generate edge color variable to plot the path:
+ecol <- rep("gray80", ecount(net))
+ecol[unlist(news.path$epath)] <- "orange"
+# Generate edge width variable to plot the path:
+ew <- rep(2, ecount(net))
+ew[unlist(news.path$epath)] <- 4
+# Generate node color variable to plot the path:
+vcol <- rep("white", vcount(net))
+vcol[unlist(news.path$vpath)] <- "yellow"
+
+plot(net, vertex.color=vcol, edge.color=ecol, 
+     edge.width=ew, edge.arrow.mode=0, vertex.label=V(net)$media,layout=layout_with_lgl)
+```
+
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+inc.edges <- incident(net,  V(net)[media=="Wall Street Journal"], mode="all")
+
+# Set colors to plot the selected edges.
+ecol <- rep("gray80", ecount(net))
+ecol[inc.edges] <- "orange"
+vcol <- rep("grey40", vcount(net))
+vcol[V(net)$media=="Wall Street Journal"] <- "gold"
+plot(net, vertex.color=vcol, edge.color=ecol, edge.width=2,vertex.label=V(net)$media, layout=layout_with_lgl)
+```
+
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+neigh.nodes <- neighbors(net, V(net)[media=="Wall Street Journal"], mode="out")
+
+# Set colors to plot the neighbors:
+vcol[neigh.nodes] <- "#ff9d00"
+plot(net, vertex.color=vcol,vertex.label=V(net)$media,layout=layout_with_lgl)
+```
+
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+dist.from.NYT <- distances(net, v=V(net)[media=="NY Times"], 
+                           to=V(net), weights=NA)
+
+# Set colors to plot the distances:
+oranges <- colorRampPalette(c("dark red", "gold"))
+col <- oranges(max(dist.from.NYT)+1)
+col <- col[dist.from.NYT+1]
+
+plot(net, vertex.color=col, vertex.label=dist.from.NYT, edge.arrow.size=.6, 
+     vertex.label.color="white",layout=layout_with_lgl)
+```
+
+
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+cut.off <- mean(links$weight) 
+net.sp <- delete_edges(net, E(net)[weight<cut.off])
+V(net.sp)$color <- colrs[V(net.sp)$media.type]
+
+plot(net.sp, layout=layout_with_kk, vertex.label=V(net)$type.label) 
+```
+
+```{r}
+net <- graph_from_data_frame(d=links, vertices=nodes,directed = TRUE) 
+net <- simplify(net, remove.multiple = TRUE, remove.loops = TRUE) 
+par(mfrow=c(1,2))
+plot(net, mark.groups=c(1,4,5,8), mark.col="#C5E5E7", mark.border=NA,vertex.label=V(net)$type.label,layout=layout_with_lgl)
+
+# Mark multiple groups:
+plot(net, mark.groups=list(c(1,4,5,8), c(15:17)), 
+          mark.col=c("#C5E5E7","#ECD89A"), mark.border=NA,vertex.label=V(net)$type.label,layout=layout_with_lgl)
+```
+
+
+### Change node size using node metrics
+
+```{r}
+deg <- degree(net, mode="all")
+V(net)$size <- deg*3
+plot(net, edge.color="black",
+     vertex.color="orange", vertex.frame.color="black",
+     vertex.label=V(net)$media, vertex.label.color="black")
+```
+
+```{r}
+deg <- degree(net, mode="all")
+V(net)$size <- deg*3
+plot(net, edge.color="black",
+     vertex.color=V(net)$media.type, vertex.frame.color="black",
+     vertex.label=V(net)$media, vertex.label.color="black")
+```
+
+
+### Bi Partite Configuration
+
+```{r}
+A=c(1,1,0,0) 
+B=c(1,0,1,0) 
+C=c(1,0,1,0) 
+D=c(0,1,0,1) 
+E=c(0,0,1,1) 
+bm=matrix(c(A,B,C,D,E),nrow=5,byrow=TRUE) 
+dimnames(bm)=list(c("A","B","C","D","E"),c("Group1","Group2","Group3","Group4"))
+bm
+bg<-graph_from_incidence_matrix(bm)
+```
+
+
+```{r}
+V(bg)$type 
+V(bg)$name
+```
+
+
+```{r}
+V(bg)$shape <- c("square", "circle")[V(bg)$type+1]
+plot(bg, layout=layout.bipartite) 
+```
+```{r}
+V(bg)$shape <- c("square", "circle")[V(bg)$type+1]
+plot(bg, layout=layout_with_dh) 
+```
+```{r}
+plot(bg, vertex.shape="none", vertex.label=bg$label,
+     vertex.label.color=V(bg)$color, vertex.label.font=2, 
+     edge.color="gray70",  edge.width=2)
+```
+
+```{r}
+library("png")
+ 
+img.1 <- readPNG("m.png")
+img.2 <- readPNG("n.png")
+
+V(bg)$raster <- list(img.1, img.2)[V(bg)$type+1]
+
+plot(bg, vertex.shape="raster", vertex.label=NA,
+     vertex.size=30, vertex.size2=30, edge.width=2, layout=layout.bipartite)
+```
+
+
+### Network layouts
+
+```{r}
+
+net.bg<-sample_pa(1000) 
+net.rd<-erdos.renyi.game(1000,1/100)
+d<-density(degree(net.rd))
+plot(d)
+```
+
+```{r}
+net.bg <- sample_pa(100) 
+V(net.bg)$size <- 8
+V(net.bg)$frame.color <- "white"
+V(net.bg)$color <- "orange"
+V(net.bg)$label <- "" 
+E(net.bg)$arrow.mode <- 0
+plot(net.bg)
+```
+### Random layout (Not geometry or physics based)
+```{r}
+net.bg <- sample_pa(100) 
+V(net.bg)$size <- 8
+V(net.bg)$frame.color <- "white"
+V(net.bg)$color <- "orange"
+V(net.bg)$label <- "" 
+E(net.bg)$arrow.mode <- 0
+l <- layout_randomly(net.bg)
+plot(net.bg, layout=l)
+```
+## Geometry based layout
+### Circular layout
+```{r}
+l <- layout_in_circle(net.bg)
+plot(net.bg, layout=l)
+```
+### Star layout
+```{r}
+l <- layout_as_star(net.bg,center = V(net.bg)[1])
+plot(net.bg, layout=l,)
+```
+### Grid layout
+```{r}
+l <- layout_on_grid(net.bg, width=10, height=10, dim=2)
+plot(net.bg, layout=l)
+```
+### Sphere lyout
+```{r}
+l <- layout_on_sphere(net.bg)
+plot(net.bg, layout=l)
+```
+
+## Physics based layout
+### Fruchterman-Reingold (FR)
+```{r}
+l <- layout_with_fr(net.bg)
+plot(net.bg, layout=l)
+```
+### Kamada Kawai (KK)
+```{r}
+l <- layout_with_kk(net.bg)
+plot(net.bg, layout=l)
+```
+### Davidson-Harel layout (DH)
+```{r}
+l <- layout_with_dh(net.bg)
+plot(net.bg, layout=l)
+```
+
+### GEM layouut
+```{r}
+l <- layout_with_gem(net.bg)
+plot(net.bg, layout=l)
+```
+
+
+### Choosing Layouts
+
+
+### Interactive Network Visualizations
+```{r}
+library("visNetwork") 
+vis.nodes <- nodes
+vis.links <- links
+vis.nodes$shape  <- "dot"  
+vis.nodes$shadow <- TRUE # Nodes will drop shadow
+vis.nodes$title  <- vis.nodes$media # Text on click
+vis.nodes$label  <- vis.nodes$type.label # Node label
+vis.nodes$size   <- vis.nodes$audience.size # Node size
+vis.nodes$borderWidth <- 2 # Node border width
+
+vis.nodes$color.background <- c("slategrey", "tomato", "gold")[nodes$media.type]
+vis.nodes$color.border <- "black"
+vis.nodes$color.highlight.background <- "orange"
+vis.nodes$color.highlight.border <- "darkred"
+
+visNetwork(vis.nodes, vis.links)
+```
+
+
+
+```{r}
+vis.links$width <- 1+links$weight/8 # line width
+vis.links$color <- "gray"    # line color  
+vis.links$arrows <- "middle" # arrows: 'from', 'to', or 'middle'
+vis.links$smooth <- FALSE    # should the edges be curved?
+vis.links$shadow <- FALSE    # edge shadow
+
+visnet <- visNetwork(vis.nodes, vis.links)
+visnet
+```
+
+
+```{r}
+visOptions(visnet, highlightNearest = TRUE, selectedBy = "type.label")
+
+```
+
+
+```{r}
+nodes$group <- nodes$type.label 
+visnet3 <- visNetwork(nodes, links)
+visnet3 <- visGroups(visnet3, groupname = "Newspaper", shape = "square",
+                     color = list(background = "gray", border="black"))
+visnet3 <- visGroups(visnet3, groupname = "TV", shape = "dot",       
+                     color = list(background = "tomato", border="black"))
+visnet3 <- visGroups(visnet3, groupname = "Online", shape = "diamond",   
+                     color = list(background = "orange", border="black"))
+visLegend(visnet3, main="Legend", position="right", ncol=1) 
+```
+
+
