@@ -1,0 +1,146 @@
+---
+title: "Week 6.1"
+output:
+  pdf_document: default
+  html_document: default
+---
+## Single Variable - Histogram
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+
+ggplot(mpg, aes(x = cty)) +
+        geom_histogram()
+```
+
+```{r}
+# Freedmanâ Diaconis rule for binwidth
+bw <- 2 * IQR(mpg$cty) / length(mpg$cty)^(1/3)
+# number of bins
+n_bins = ((max(mpg$cty)-min(mpg$cty))/bw)
+
+ggplot(mpg, aes(x = cty)) +
+        geom_histogram()
+```
+
+```{r}
+# Histogram Patterns
+# Unimodal symmetric
+hist(rnorm(1000))
+```
+
+```{r}
+# bimodal
+hist(quakes$depth)
+```
+
+```{r}
+# bimodal
+hist(faithful$waiting)
+```
+
+```{r}
+# Overlapping histogram
+temp<-select(mpg, manufacturer, cty)
+temp<-filter(temp, manufacturer=="audi"|manufacturer=="dodge")
+ggplot(temp, aes(x = cty, fill=manufacturer))+geom_histogram(alpha = .5) +theme_update(text = element_text(size=16))
+```
+
+## Density Plot
+```{r}
+ggplot(mpg, aes(x = cty)) +
+       geom_density(fill="steelblue")
+```
+
+```{r}
+# Overlapping density plot
+temp<-select(mpg, manufacturer, cty)
+temp<-filter(temp, manufacturer=="audi"|manufacturer=="dodge")
+ggplot(temp, aes(x = cty, fill=manufacturer))+geom_density(alpha = .5) +theme_update(text = element_text(size=16))
+```
+
+```{r}
+# Density Patterns
+# Unimodal symmetric
+temp<-density(rnorm(1000))
+plot(temp)
+```
+
+```{r}
+# bimodal
+temp<-density(quakes$depth)
+plot(temp)
+```
+
+```{r}
+library(ggplot2)
+library(ggExtra)
+
+
+# classic plot :
+p<-ggplot(faithful, aes(x=eruptions, y=waiting)) +
+      geom_point() 
+# with marginal histogram
+#ggMarginal(p, type="histogram")
+ 
+# marginal density
+ggMarginal(p, type="density")
+ 
+
+```
+
+```{r}
+# Two dimension histogram
+ ggplot(faithful, aes(x=eruptions, y=waiting)) +geom_bin2d()
+```
+
+```{r}
+# Two dimension density plot
+ ggplot(faithful, aes(x=eruptions, y=waiting)) +geom_density2d()
+```
+
+```{r}
+ ggplot(faithful, aes(x=eruptions, y=waiting)) +stat_density2d(aes(fill = ..level..), geom="polygon")
+```
+
+## Box Plot
+```{r}
+p1<-ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_boxplot()
+p2<-ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_boxplot()+coord_flip()
+p3<-ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_boxplot(notch=TRUE)
+grid.arrange(p1, p2, p3,ncol = 3, heights=c(1,1))
+```
+
+```{r}
+ggplot(ToothGrowth, aes(x=factor(dose), y=len, fill=supp)) + geom_boxplot()
+```
+
+# Data Distribution-Violin Plots
+```{r}
+ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_violin()
+```
+
+```{r}
+p1<-ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_violin()
+p2<-ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_violin()+coord_flip()
+grid.arrange(p1, p2,ncol = 2, heights=c(1,1))
+
+
+```
+
+```{r}
+ggplot(ToothGrowth, aes(x=factor(dose), y=len)) + 
+  geom_violin()+geom_boxplot(width=0.1)
+```
+
+```{r}
+ggplot(ToothGrowth, aes(x=factor(dose), y=len,fill=supp)) + geom_violin()
+```
+
