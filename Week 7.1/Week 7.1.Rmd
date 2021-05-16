@@ -1,0 +1,46 @@
+---
+title: "Week 7.1"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(forcats)
+library(hrbrthemes)
+```
+
+## Line Plots
+```{r, warning=FALSE}
+df2 <- data.frame(supp=rep(c("VC", "OJ"), each=3),
+                dose=rep(c("D0.5", "D1", "D2"),2),
+                len=c(6.8, 15, 33, 4.2, 10, 29.5))
+
+p1<-ggplot(subset(df2,df2$supp=="VC"), aes(x=dose, y=len, group=1)) +geom_line(color="red")+ggtitle("x is categorical and y is continuous")+theme_ipsum()
+
+p1
+```
+
+```{r}
+# Introducing hue
+ggplot(df2, aes(x=dose, y=len, group=supp, color=supp)) +geom_line()+ geom_point()+ggtitle("x is categorical and y is continuous")+theme_ipsum()
+```
+
+```{r}
+#Introducing hue and line type
+ggplot(df2, aes(x=dose, y=len, group=supp, color=supp)) +geom_line(aes(linetype=supp))+ geom_point(size=2)+ggtitle("x is continuous and y is continuous")+theme_ipsum()
+```
+
+```{r}
+
+df <- data.frame(Income=c("Low", "Medium", "High"), Mean_SAT=c(450, 550, 600))
+ggplot(df, aes(x=fct_inorder(Income),  y= Mean_SAT, group=1)) +geom_line()+xlab("Income")+geom_point(size=2)+theme_ipsum()
+```
+
+```{r}
+df3 <- data.frame(Category=c("Furniture", "Technology", "Office Supplies"), Total_Sales=c(4500, 6000, 8000))
+ggplot(df3, aes(x=fct_inorder(Category),  y= Total_Sales, group=1)) +geom_line()+xlab("Category")+geom_point(size=2)+theme_ipsum()
+```
+
