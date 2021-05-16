@@ -1,0 +1,286 @@
+---
+title: "Week 2.2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+### Pivot using tidyr package
+```{r echo=TRUE}
+library(magrittr)
+library(tidyr)
+library(dplyr)
+library(magrittr)
+library(ggplot2)
+library(lubridate)
+# wide to long form
+data<-relig_income
+data
+result<-data %>%
+  pivot_longer(-religion, 
+               names_to = "income", 
+               values_to = "count",
+               values_drop_na = TRUE)
+result
+```
+
+```{r}
+data<-billboard
+data
+result <- data %>%
+  pivot_longer(-c(artist, track, date.entered),
+    names_to = "week",
+    values_to = "rank",
+    values_drop_na = TRUE)
+result
+```
+
+```{r}
+# long to wide form
+data<-fish_encounters
+data
+result <- data %>%
+  pivot_wider(names_from = station, values_from = seen)
+result
+```
+
+```{r}
+result<-data %>%
+  pivot_wider(
+    names_from = station,
+    values_from = seen,
+    values_fill = list(seen = 0)
+  )
+result
+```
+
+### Real world application of pivot operation
+```{r}
+library(readr)
+covid_data<-read_csv("covid_ts.csv")
+```
+
+```{r}
+# Pivot dates (wide to long form)
+sample_data<-covid_data[,c(6,7,12:382)]
+sample_data
+result<-sample_data %>%
+  pivot_longer( -c(Admin2, Province_State),
+                names_to = "date", 
+               values_to = "count",
+               values_drop_na = TRUE)
+result
+```
+
+```{r}
+# Compare evolution of Autauga and Crenshaw counts
+result$date<-as_date(result$date, format="%m/%d/%y")
+result %>%  
+filter(Admin2=="Autauga" | Admin2=="Crenshaw")%>%
+  ggplot(aes(x=date,y=count,group=Admin2,color=Admin2))+geom_line()
+```
+
+```{r}
+# Compare evolution of Massachusetts and Florida counts
+result%>%
+  filter(Province_State=="Massachusetts" | Province_State=="Florida")%>%
+  group_by(Province_State, date)%>%
+  summarise(total=sum(count, na.rm=T))%>%
+  ggplot(aes(x=date,y=total,group=Province_State,color=Province_State))+geom_line()
+```
+
+### Binding operations
+```{r}
+y <- data.frame(x1=c("A","B","C"), x2=c(1,2,3), stringsAsFactors = F)
+z <- data.frame(x1=c("B","C","D"), x2=c(2,3,4),stringsAsFactors = F)
+result<-bind_rows(y, z)
+result
+```
+
+```{r}
+result<-bind_cols(y, z)
+result
+```
+
+```{r}
+# Union operations
+result<-intersect(y, z)
+result
+```
+
+```{r}
+result<-union(y, z)
+result
+```
+
+```{r}
+result<-setdiff(y,z)
+result
+```
+
+```{r}
+# Join Operations
+a <- data.frame(x1=c("A","B","C"), x2=c(1,2,3))
+b <- data.frame(x1=c("A","B","D"), x3=c(T,F,T))
+
+left_join(a,b, by="x1")
+right_join(a,b, by="x1")
+inner_join(a,b, by="x1")
+full_join(a,b, by="x1")
+```
+
+### Hands on 
+```{r}
+# Task 1: Use join operation and combine farmers market data and division_data
+library(readxl)
+division_data <- read_csv('division_data.csv')
+fm <- read_excel('fm.xlsx')
+result <- left_join(fm, division_data, by="State")
+```
+
+### Control Statements - if
+```{r}
+x<-1
+y<-1
+
+if (x==y) {
+  print("Yes")
+}
+```
+
+```{r}
+x<-"a"
+y<-"a"
+
+if (x==y) {
+  print("Yes")
+}
+```
+
+```{r}
+var<-c(10,20,30)
+
+if (var==10) {
+  print("Yes")
+}
+```
+
+### Control Statements - ifelse
+```{r}
+if (TRUE) {
+  print("Yes")
+}else {
+  print("No")
+}
+```
+
+```{r}
+var<-c(10,20,30)
+
+ifelse(any(var>10),"There are values greater than 10","There are no values greater than 10")
+
+ifelse(any(var<10),"There are values greater than 10","There are no values less than 10")
+
+```
+
+### Control Statements - elseif
+```{r}
+x <- 6
+if(x >= 10){
+  print("x is greater than 10")
+} else if(x >= 5 & x < 10){
+  print("x is between 5 and 10")
+} 
+
+```
+
+### Loop - for
+```{r}
+for (i in 1:10){
+  print(i)
+}
+```
+
+```{r}
+# Using index values
+vec<-40:50
+for (i in 1:10){
+  print(vec[i])
+}
+```
+
+```{r}
+# Using actual values inside a data structure
+names<-letters[1:10]
+for (i in names){
+  print(i)
+}
+
+```
+
+### Loop - while
+```{r}
+index<-1
+while(index <= 10) {
+  print(index)
+  index<-index+1
+}
+
+```
+
+```{r}
+# when to use while and when to use for loop?
+counter <- 1
+x <- 5
+set.seed(3)
+
+while(x >= 3 & x <= 8 ) {
+  coin <- rbinom(1,1, 0.5)
+  
+  if(coin == 1) { ## random walk
+    x <- x + 1
+  } else {
+    x <- x - 1
+  }
+  cat("On iteration", counter, ", x =", x, '\n')
+  counter <- counter + 1
+}
+```
+
+```{r}
+# use of break statement
+x <- 1:5
+for (i in x) {
+  if (i == 3){
+    break
+  }
+  print(i)
+}
+
+```
+
+```{r}
+# Importance of vector operations
+k<-1000
+x<-1:k
+start_time <- Sys.time()
+for (i in 1:length(x)){
+  x[i]<-x[i]*2
+}
+end_time <- Sys.time()
+
+start_time1 <- Sys.time()
+x<-x*2
+end_time1 <- Sys.time()
+
+print(paste0("Time taken using for loop: ", (end_time-start_time)))
+print(paste0("Time taken using vector: ", (end_time1-start_time1)))
+
+```
+
+### Hands on 
+```{r}
+# Task 2: Using COVID-19 nursing home data arrange top 10 states by number of nursing facilities
+
+```
+
