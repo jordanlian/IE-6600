@@ -1,0 +1,309 @@
+---
+title: "Week 2.1"
+output:
+  pdf_document: default
+  html_document: default
+---
+### Read Data
+```{r}
+# Read data from xlsx
+library(readxl)
+superstore<-read_xlsx("Superstore.xlsx")
+```
+
+```{r}
+head(superstore)
+```
+
+### Explore Data
+```{r}
+summary(superstore)
+```
+
+#### Check data type in the environment tab
+
+### Column Operations
+```{r}
+# Checking for unique values and number of unique values
+unique_category<-unique(superstore$Category)
+unique_category
+length(unique_category)
+```
+
+```{r}
+# Column selection using index values
+sample_data<-superstore[,c(1,17:19)]
+sample_data
+```
+
+```{r}
+# Creating a new column
+sample_data$Avg_sales_per_unit<-sample_data$Sales/sample_data$Quantity
+sample_data
+```
+
+```{r}
+# Subset rows where Profit >0
+profit_data<-sample_data[sample_data$Profit>0,]
+profit_data
+```
+
+```{r}
+# Subset rows where Profit >0 and Category=Furniture
+profit_data<-sample_data[sample_data$Profit>0 & sample_data$Category=="Furniture",]
+profit_data
+```
+
+```{r}
+rm(profit_data, sample_data)
+```
+
+```{r}
+# Common issue of partial string match
+superstore[superstore$`Product Name`=="Xerox",]
+```
+
+```{r}
+# We take help of packages
+library(stringr)
+row_index<-str_which(superstore$`Product Name`, "Xerox")
+sample_data<-superstore[row_index,]
+sample_data
+```
+
+```{r}
+# Change case
+superstore$`Country/Region`<-str_to_upper(superstore$`Country/Region`)
+```
+
+```{r}
+# Split Customer name into first name, last name
+name_data<-as.data.frame(str_split(superstore$`Customer Name`, " ", simplify = T))
+superstore$Firstname<-name_data$V1
+superstore$Lastname<-name_data$V2
+```
+
+```{r}
+# Manipulate date
+library(lubridate)
+superstore$`Order Date`<-as_date(superstore$`Order Date`)
+superstore$`Ship Date`<-as_date(superstore$`Ship Date`)
+```
+
+```{r}
+# Find difference between order date and ship date
+superstore$Order_length<-as.numeric(superstore$`Ship Date`-superstore$`Order Date`)
+```
+
+```{r}
+# Check distribution of order length
+hist(superstore$Order_length)
+```
+
+```{r}
+# Does the order length distribution vary by category?
+library(ggplot2)
+ggplot(superstore, aes(Order_length, fill=Category))+geom_density(alpha=0.5)
+```
+
+```{r}
+# Extract year from date
+superstore$Year<-year(superstore$`Order Date`)
+```
+
+```{r}
+# Extract month from date
+superstore$Month<-month(superstore$`Order Date`, label=TRUE)
+```
+
+```{r}
+# Distribution of sales records by month
+ggplot(superstore, aes(Month))+geom_bar()
+```
+
+```{r}
+# Does the sales record distribution by month vary be category
+ggplot(superstore, aes(Month))+geom_bar()+facet_grid(.~Category)
+```
+
+```{r}
+# Extract day from date
+superstore$Day<-wday(superstore$`Order Date`, label=T)
+```
+
+```{r}
+# Distribution of sales records by day
+ggplot(superstore, aes(Day))+geom_bar()
+```
+
+```{r}
+# Distribution of sales records by day and by month
+ggplot(superstore, aes(Day))+geom_bar()+facet_grid(.~Month)
+```
+
+### Data Aggregation
+```{r}
+library(tidyr)
+library(dplyr)
+library(magrittr)
+# Calculate number of records by category
+superstore %>%
+  group_by(Category) %>%
+  summarise(Number_of_records=n())%>%
+  arrange(desc(Number_of_records))
+```
+
+```{r}
+# Calculate number of records by category and region
+superstore %>%
+  group_by(Category, Region) %>%
+  summarise(Number_of_records=n())%>%
+  arrange(desc(Number_of_records))
+```
+
+```{r}
+# One aggregation function on one variable
+superstore %>%
+  group_by(Category) %>%
+  summarise(Total_Sales=sum(Sales,na.rm=T)) %>%
+  arrange(desc(Total_Sales))
+```
+
+```{r}
+# One aggregation function on one variable with visualization
+superstore %>%
+  group_by(Category) %>%
+  summarise(Total_Sales=sum(Sales,na.rm=T)) %>%
+  arrange(desc(Total_Sales)) %>%
+  ggplot(aes(x=Category, y=Total_Sales))+geom_bar(stat="identity")
+```
+
+```{r}
+# One aggregation function on multiple variables
+superstore %>%
+  group_by(Category) %>%
+  summarise(Total_Sales=sum(Sales,na.rm=T), Total_Profit=sum(Profit,na.rm=T))%>%
+  arrange(desc(Total_Sales))
+```
+
+```{r}
+# One aggregation function on multiple variables
+superstore %>%
+  group_by(Category, Region) %>%
+  summarise(Total_Sales=sum(Sales,na.rm=T), Total_Profit=sum(Profit,na.rm=T))%>%
+  arrange(desc(Total_Sales))
+```
+
+```{r}
+# Multiple aggregation functions on one variable
+superstore %>%
+  group_by(Category) %>%
+  summarise(Total_Sales=sum(Sales,na.rm=T), Avg_Sales=mean(Sales,na.rm=T))%>%
+  arrange(desc(Total_Sales))
+```
+
+```{r}
+# Multiple aggregation functions on multiple variables
+superstore %>%
+  group_by(Category) %>%
+  summarise(Total_Sales=sum(Sales,na.rm=T), Avg_Profit=mean(Profit,na.rm=T))%>%
+  arrange(desc(Total_Sales))
+```
+
+```{r}
+# Note that sum function is different from count function
+superstore %>%
+  group_by(Category) %>%
+  summarise(Number_of_records=n(), Total_Sales=sum(Sales,na.rm=T))%>%
+  arrange(desc(Total_Sales))
+```
+
+### Real world application
+
+```{r}
+nydata<-read.csv('ny_accidents.csv', na.strings = "")
+```
+
+```{r}
+# Convert date format
+nydata$CRASH.DATE<-as_date(nydata$CRASH.DATE, format="%m/%d/%y")
+
+```
+
+```{r}
+# See how number of motor vehicle collisions change over days
+nydata$Day<-wday(nydata$CRASH.DATE, label=T)
+```
+
+```{r}
+nydata %>%
+  group_by(Day)%>%
+  summarise(Total_Incidents=n())
+```
+
+```{r}
+# Check number of collisions by Borough
+nydata %>%
+  group_by(BOROUGH)%>%
+  summarise(Total_Incidents=n())%>%
+  arrange(desc(Total_Incidents))%>%
+  drop_na()
+```
+
+```{r}
+# Check number of collisions by Borough and plot
+nydata %>%
+  group_by(BOROUGH)%>%
+  summarise(Total_Incidents=n())%>%
+  arrange(desc(Total_Incidents))%>%
+  drop_na()%>%
+   ggplot(aes(x=BOROUGH, y=Total_Incidents))+geom_bar(stat="identity")
+```
+
+```{r}
+# Task 1: Which zip code in Bronx has the maximum number of collisions?
+```
+
+```{r}
+# What are the top three contributing factors for vehicle 1 involved in a collision?
+```
+
+```{r}
+# Which Borough has the highest number of persons injured?
+```
+
+### Pivot using tidyr package
+```{r}
+# wide to long form
+data<-relig_income
+answer<-data %>%
+  pivot_longer(-religion, 
+               names_to = "income", 
+               values_to = "count",
+               values_drop_na = TRUE)
+```
+
+```{r}
+data<-billboard
+answer <- data %>%
+  pivot_longer(-c(artist, track, date.entered),
+    names_to = "week",
+    values_to = "rank",
+    values_drop_na = TRUE)
+```
+
+```{r}
+# long to wide form
+data<-fish_encounters
+answer <- data %>%
+  pivot_wider(names_from = station, values_from = seen)
+```
+
+```{r}
+answer<-data %>%
+  pivot_wider(
+    names_from = station,
+    values_from = seen,
+    values_fill = list(seen = 0)
+  )
+```
